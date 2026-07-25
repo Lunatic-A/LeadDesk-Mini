@@ -67,27 +67,11 @@ def health_check():
     status_code=201
 )
 
-@app.post("/api/login")
-def login(credentials: LoginRequest):
-
-    if credentials.username != ADMIN_USERNAME:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    if not verify_password(
-        credentials.password,
-        ADMIN_PASSWORD_HASH
-    ):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    token = create_access_token(
-        {"sub": credentials.username}
-    )
-
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
-
+@app.post(
+    "/api/leads",
+    response_model=LeadResponse,
+    status_code=201
+)
 def create_lead(
     lead: LeadCreate,
     db: Session = Depends(get_db)
