@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from database import Base, engine, SessionLocal
-from backend.models import Lead
-from backend.schemas import LeadCreate, LeadResponse
+from models import Lead
+from schemas import LeadCreate, LeadResponse
 
 
 # Create database tables
@@ -19,12 +19,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://lead-desk-mini-q3ke32q4h-ashprojectsvercelapp.vercel.app",
+        "https://lead-desk-mini-lovat.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
+) 
 
 # Database dependency
 def get_db():
