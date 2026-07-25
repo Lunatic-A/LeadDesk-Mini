@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-
+from auth import get_current_admin
 from database import Base, engine, SessionLocal
 from models import Lead
 from schemas import LeadCreate, LeadResponse
@@ -116,7 +116,7 @@ def update_lead_status(
     lead_id: int,
     status_update: StatusUpdate,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    current_user: str = Depends(get_current_admin)
 ):
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
 
