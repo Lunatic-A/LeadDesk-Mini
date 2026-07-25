@@ -340,6 +340,15 @@ function PublicLandingPage() {
   event.preventDefault();
 
   try {
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      budget: formData.budget,
+      message: formData.message,
+    };
+
+    console.log("Submitting:", payload);
+
     const response = await fetch(
       `${API_URL}/api/leads`,
       {
@@ -347,7 +356,7 @@ function PublicLandingPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       }
     );
 
@@ -360,13 +369,7 @@ function PublicLandingPage() {
         errorMessage = data.detail;
       } else if (Array.isArray(data.detail)) {
         errorMessage = data.detail
-          .map((error) => {
-            if (typeof error === "string") {
-              return error;
-            }
-
-            return error.msg || "Invalid input";
-          })
+          .map((error) => error.msg || "Invalid input")
           .join(", ");
       }
 

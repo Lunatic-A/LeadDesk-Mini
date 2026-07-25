@@ -3,11 +3,10 @@ from datetime import datetime
 
 
 class LeadCreate(BaseModel):
-    name: str = Field(
-        ...,
-        min_length=2,
-        max_length=100
-    )
+    name: str
+    email: EmailStr
+    budget: str
+    message: str
 
     email: EmailStr
 
