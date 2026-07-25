@@ -10,10 +10,10 @@ function AdminDashboard() {
       setLoading(true);
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/leads?search=${encodeURIComponent(
-          searchTerm
-        )}`
-      );
+  `https://leaddesk-mini-2cyf.onrender.com/api/leads?search=${encodeURIComponent(
+    searchTerm
+  )}`
+);
 
       const data = await response.json();
       setLeads(data);
@@ -31,11 +31,11 @@ function AdminDashboard() {
   const updateStatus = async (leadId, newStatus) => {
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/leads/${leadId}/status?status=${newStatus}`,
-        {
-          method: "PATCH",
-        }
-      );
+  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status?status=${newStatus}`,
+  {
+    method: "PATCH",
+  }
+);
 
       if (!response.ok) {
         throw new Error("Failed to update status");
@@ -233,7 +233,7 @@ function App() {
   event.preventDefault();
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/leads", {
+    const response = await fetch("https://leaddesk-mini-2cyf.onrender.com/api/leads", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
