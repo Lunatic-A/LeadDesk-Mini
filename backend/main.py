@@ -21,7 +21,7 @@ app.add_middleware(
         "http://localhost:5173",
         "lead-desk-mini-gvm2mo3t3-ashprojectsvercelapp.vercel.app",
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
