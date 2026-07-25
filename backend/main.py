@@ -10,6 +10,12 @@ from auth import verify_password, create_access_token
 from admin import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
 from schemas import LoginRequest
 
+from auth import (
+    verify_password,
+    create_access_token,
+    get_current_admin
+)
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
@@ -21,8 +27,8 @@ app = FastAPI(title="LeadDesk Mini API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
         "https://lead-desk-mini-lovat.vercel.app",
+        "http://localhost:5173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -104,7 +110,8 @@ def create_lead(
 @app.get("/api/leads")
 def get_leads(
     search: str = "",
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: str = Depends(get_current_admin)
 ):
     query = db.query(Lead)
 
@@ -124,7 +131,8 @@ def get_leads(
 def update_lead_status(
     lead_id: int,
     status: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_admin: str = Depends(get_current_admin)
 ):
     allowed_statuses = [
         "New",

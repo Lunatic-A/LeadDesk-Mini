@@ -2,4 +2,4 @@ from auth import hash_password
 
 ADMIN_USERNAME = "admin"
 
-ADMIN_PASSWORD_HASH = "$2b$12$Q4olRlPkWTxMqGBsx9BdUOqQHz3e8f7qif4P/LUeN3LnK1B9LsL.a"
+ADMIN_PASSWORD_HASH = "$2b$12$9Yacxyruqewhp1isuamBne2SFGYZsfF.hc7dooYP0F65TbTG3948a"

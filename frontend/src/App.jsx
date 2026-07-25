@@ -10,10 +10,17 @@ function AdminDashboard() {
     try {
       setLoading(true);
 
-      const response = await fetch(
+      const token = localStorage.getItem("token");
+
+const response = await fetch(
   `https://leaddesk-mini-2cyf.onrender.com/api/leads?search=${encodeURIComponent(
     searchTerm
-  )}`
+  )}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
 );
 
       const data = await response.json();
@@ -29,12 +36,17 @@ function AdminDashboard() {
     fetchLeads();
   }, []);
 
-  const updateStatus = async (leadId, newStatus) => {
-    try {
-      const response = await fetch(
-  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status?status=${newStatus}`,
+  const response = await fetch(
+  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status`,
   {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      status: newStatus,
+    }),
   }
 );
 
