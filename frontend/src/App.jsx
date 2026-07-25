@@ -57,35 +57,45 @@ function AdminDashboard() {
   }, []);
 
   const updateStatus = async (leadId, newStatus) => {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      const response = await fetch(
-        `${API_URL}/api/leads/${leadId}/status`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            status: newStatus,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Failed to update status");
+    const response = await fetch(
+      `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status?status=${encodeURIComponent(
+        newStatus
+      )}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
+    );
 
-      // Refresh the lead list after updating
-      fetchLeads(search);
-    } catch (error) {
-      alert(error.message);
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMessage = Array.isArray(data.detail)
+        ? data.detail.map((error) => error.msg).join(", ")
+        : data.detail || "Failed to update status";
+
+      throw new Error(errorMessage);
     }
-  };
+
+    // Update the UI immediately
+    setLeads((currentLeads) =>
+      currentLeads.map((lead) =>
+        lead.id === leadId
+          ? { ...lead, status: newStatus }
+          : lead
+      )
+    );
+
+  } catch (error) {
+    console.error("Status update failed:", error);
+    alert(error.message);
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -340,44 +350,28 @@ function PublicLandingPage() {
   event.preventDefault();
 
   try {
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      budget: formData.budget,
-      message: formData.message,
-    };
-
-    console.log("Submitting:", payload);
-
     const response = await fetch(
-  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status?status=${encodeURIComponent(newStatus)}`,
-  {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  }
-);
+      "https://leaddesk-mini-2cyf.onrender.com/api/leads",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      }
+    );
 
     const data = await response.json();
 
     if (!response.ok) {
-      let errorMessage = "Something went wrong";
-
-      if (typeof data.detail === "string") {
-        errorMessage = data.detail;
-      } else if (Array.isArray(data.detail)) {
-        errorMessage = data.detail
-          .map((error) => error.msg || "Invalid input")
-          .join(", ");
-      }
+      const errorMessage = Array.isArray(data.detail)
+        ? data.detail.map((error) => error.msg).join(", ")
+        : data.detail || "Something went wrong";
 
       throw new Error(errorMessage);
     }
 
-    alert(
-      "Thank you! Your project details have been submitted."
-    );
+    alert("Thank you! Your project details have been submitted.");
 
     setFormData({
       name: "",
