@@ -114,25 +114,11 @@ def get_leads(
 @app.patch("/api/leads/{lead_id}/status")
 def update_lead_status(
     lead_id: int,
-    status: str,
+    status_update: StatusUpdate,
     db: Session = Depends(get_db),
-    current_admin: str = Depends(get_current_admin)
+    current_user: str = Depends(get_current_user)
 ):
-    allowed_statuses = [
-        "New",
-        "Contacted",
-        "Closed"
-    ]
-
-    if status not in allowed_statuses:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid status"
-        )
-
-    lead = db.query(Lead).filter(
-        Lead.id == lead_id
-    ).first()
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
 
     if not lead:
         raise HTTPException(
@@ -140,7 +126,13 @@ def update_lead_status(
             detail="Lead not found"
         )
 
-    lead.status = status
+    if status_update.status not in ["New", "Contacted", "Closed"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid status"
+        )
+
+    lead.status = status_update.status
 
     db.commit()
     db.refresh(lead)

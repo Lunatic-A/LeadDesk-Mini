@@ -350,15 +350,18 @@ function PublicLandingPage() {
     console.log("Submitting:", payload);
 
     const response = await fetch(
-      `${API_URL}/api/leads`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status`,
+  {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({
+      status: newStatus,
+    }),
+  }
+);
 
     const data = await response.json();
 
