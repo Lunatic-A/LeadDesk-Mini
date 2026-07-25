@@ -337,42 +337,57 @@ function PublicLandingPage() {
   };
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    try {
-      const response = await fetch(
-        `${API_URL}/api/leads`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+  try {
+    const response = await fetch(
+      `${API_URL}/api/leads`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      }
+    );
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          data.detail || "Something went wrong"
-        );
+    if (!response.ok) {
+      let errorMessage = "Something went wrong";
+
+      if (typeof data.detail === "string") {
+        errorMessage = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        errorMessage = data.detail
+          .map((error) => {
+            if (typeof error === "string") {
+              return error;
+            }
+
+            return error.msg || "Invalid input";
+          })
+          .join(", ");
       }
 
-      alert(
-        "Thank you! Your project details have been submitted."
-      );
-
-      setFormData({
-        name: "",
-        email: "",
-        budget: "",
-        message: "",
-      });
-    } catch (error) {
-      alert(error.message);
+      throw new Error(errorMessage);
     }
-  };
+
+    alert(
+      "Thank you! Your project details have been submitted."
+    );
+
+    setFormData({
+      name: "",
+      email: "",
+      budget: "",
+      message: "",
+    });
+
+  } catch (error) {
+    alert(error.message);
+  }
+};
 
   return (
     <div className="app">
