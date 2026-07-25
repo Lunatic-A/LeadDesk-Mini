@@ -1,14 +1,25 @@
 # LeadDesk Mini
 
-A full-stack lead capture and management application built for the **Digital Heroes Full Stack Development Training Task**.
+A full-stack lead capture and management application built as part of the **Digital Heroes Full Stack Development Training Task**.
 
-LeadDesk Mini provides a public-facing project enquiry form and an admin dashboard for managing submitted leads through their lifecycle.
+LeadDesk Mini was developed in two stages:
+
+* **Task A — Build LeadDesk Mini**
+* **Task B — Secure It and Ship It**
+
+The final application provides a public project enquiry form, database persistence, authenticated admin access, lead management, search, status updates, and a live deployed environment.
 
 ---
 
+# Task A — Build LeadDesk Mini
+
 ## Overview
 
-LeadDesk Mini is designed around a simple workflow:
+LeadDesk Mini is a lead capture and management application.
+
+Visitors can submit project enquiries through a public-facing form. Administrators can access a dedicated dashboard to view, search, and manage submitted leads.
+
+The lead lifecycle is:
 
 ```text
 Visitor
@@ -17,23 +28,21 @@ Submits project enquiry
    ↓
 Lead is validated
    ↓
-Lead is stored in SQLite
+Lead is stored in the database
    ↓
-Admin views and searches leads
+Admin views the lead
    ↓
-Lead status is updated
-(New → Contacted → Closed)
+Admin updates the status
+New → Contacted → Closed
 ```
-
-The project demonstrates the complete flow between a React frontend, FastAPI backend, database persistence, validation, and an admin management interface.
 
 ---
 
-## Features
+## Task A Features
 
 ### Public Landing Page
 
-* Modern, responsive landing page
+* Responsive landing page
 * Project enquiry form
 * Name field
 * Email field
@@ -42,58 +51,189 @@ The project demonstrates the complete flow between a React frontend, FastAPI bac
 * Client-side form validation
 * Server-side validation
 * Success and error handling
-* Responsive design for different screen sizes
+* Responsive design
 * Required Digital Heroes training task credit in the footer
+
+### Lead Management
+
+Each submitted enquiry is stored as a lead containing:
+
+* Name
+* Email
+* Budget
+* Project message
+* Status
+* Creation timestamp
+
+The default status of every new lead is:
+
+```text
+New
+```
+
+Administrators can update the lead status through the dashboard:
+
+```text
+New → Contacted → Closed
+```
 
 ### Admin Dashboard
 
-* Dedicated `/admin` dashboard
-* Overview statistics:
+The dashboard provides:
 
-  * Total Leads
-  * New Leads
-  * Contacted Leads
-  * Closed Leads
-* View all submitted leads
+* Total lead count
+* New lead count
+* Contacted lead count
+* Closed lead count
+* View all leads
 * Search leads by name or email
 * View budget information
 * View project messages
 * View submission dates
-* Update lead status:
-
-  * New
-  * Contacted
-  * Closed
-* Status updates are persisted in the database
-* Responsive dashboard layout
-* Empty and loading states
+* Update lead status
+* Loading states
+* Empty states
+* Responsive layout
 
 ---
 
-## Tech Stack
+# Task B — Secure It and Ship It
 
-### Frontend
+Task B takes LeadDesk Mini from a basic working application and makes it suitable for a client-facing live environment.
+
+The focus of Task B was:
+
+* Real admin authentication
+* Secure protected API access
+* Deployment
+* Fresh-browser testing
+* Documentation
+* Walkthrough of the complete application flow
+
+---
+
+## Task B — Authentication
+
+The admin area uses real backend authentication instead of relying on a hardcoded frontend access check.
+
+The authentication flow is:
+
+```text
+Admin enters username and password
+              ↓
+Frontend sends credentials to backend
+              ↓
+Backend validates credentials
+              ↓
+Password is verified against a stored password hash
+              ↓
+Backend generates a JWT access token
+              ↓
+Frontend stores the token
+              ↓
+Protected requests include the JWT token
+              ↓
+Backend validates the token
+              ↓
+Admin can access protected lead-management endpoints
+```
+
+### JWT Authentication
+
+After successful login, the backend returns an access token.
+
+Protected requests include:
+
+```text
+Authorization: Bearer <access_token>
+```
+
+The backend validates the token before allowing access to protected endpoints.
+
+### Password Security
+
+The admin password is not stored as plaintext for verification.
+
+The backend uses password hash verification before issuing an access token.
+
+### Protected Endpoints
+
+The following endpoints require authentication:
+
+```text
+GET /api/leads
+PATCH /api/leads/{lead_id}/status
+```
+
+The lead submission endpoint remains publicly accessible:
+
+```text
+POST /api/leads
+```
+
+---
+
+# Data Model
+
+The application uses a `Lead` model.
+
+| Field      | Type     | Description                               |
+| ---------- | -------- | ----------------------------------------- |
+| id         | Integer  | Unique lead identifier                    |
+| name       | String   | Name of the person submitting the enquiry |
+| email      | String   | Email address                             |
+| budget     | String   | Selected budget range                     |
+| message    | String   | Project description                       |
+| status     | String   | Current lead status                       |
+| created_at | DateTime | Time the lead was created                 |
+
+### Default Lead Status
+
+```text
+New
+```
+
+### Lead Status Lifecycle
+
+```text
+New → Contacted → Closed
+```
+
+Lead status changes are persisted in the database.
+
+---
+
+# Technology Stack
+
+## Frontend
 
 * React
 * Vite
 * JavaScript
 * CSS
 
-### Backend
+## Backend
 
 * Python
 * FastAPI
 * Uvicorn
 * SQLAlchemy
 * Pydantic
+* JWT Authentication
+* Password Hash Verification
 
-### Database
+## Database
 
 * SQLite
 
+## Deployment
+
+* Frontend: Vercel
+* Backend: Render
+
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 LeadDesk-Mini/
@@ -102,6 +242,7 @@ LeadDesk-Mini/
 │   │
 │   ├── src/
 │   │   ├── App.jsx
+│   │   ├── Login.jsx
 │   │   ├── App.css
 │   │   ├── index.css
 │   │   └── main.jsx
@@ -113,6 +254,8 @@ LeadDesk-Mini/
 ├── backend/
 │   │
 │   ├── main.py
+│   ├── auth.py
+│   ├── admin.py
 │   ├── database.py
 │   ├── models.py
 │   ├── schemas.py
@@ -125,29 +268,29 @@ LeadDesk-Mini/
 
 ---
 
-## Application Routes
+# Application Routes
 
-### Public Website
+## Public Website
 
 ```text
 /
 ```
 
-The public landing page allows visitors to submit project enquiries.
+The public website allows visitors to submit project enquiries.
 
-### Admin Dashboard
+## Admin Dashboard
 
 ```text
 /admin
 ```
 
-The admin dashboard allows leads to be viewed, searched, and updated.
+The admin dashboard allows authenticated administrators to view, search, and update leads.
 
 ---
 
-## API Endpoints
+# API Documentation
 
-### Health Check
+## Root Health Check
 
 ```http
 GET /
@@ -157,13 +300,13 @@ Returns the API status.
 
 ---
 
-### Health Endpoint
+## Health Endpoint
 
 ```http
 GET /api/health
 ```
 
-Returns:
+Example response:
 
 ```json
 {
@@ -173,13 +316,41 @@ Returns:
 
 ---
 
-### Create Lead
+## Admin Login
+
+```http
+POST /api/login
+```
+
+Example request:
+
+```json
+{
+  "username": "admin",
+  "password": "your-password"
+}
+```
+
+Example response:
+
+```json
+{
+  "access_token": "jwt-token",
+  "token_type": "bearer"
+}
+```
+
+The access token is used for protected API requests.
+
+---
+
+## Create Lead
 
 ```http
 POST /api/leads
 ```
 
-Creates and stores a new lead.
+This endpoint is publicly accessible.
 
 Example request:
 
@@ -208,27 +379,42 @@ Example response:
 
 ---
 
-### Get Leads
+## Get Leads
 
 ```http
 GET /api/leads
 ```
 
-Returns all submitted leads.
+Returns submitted leads.
 
-Search by name or email:
+This endpoint requires JWT authentication.
+
+### Search
 
 ```http
 GET /api/leads?search=ayesha
 ```
 
+The search supports:
+
+* Lead name
+* Email address
+
+Required header:
+
+```text
+Authorization: Bearer <access_token>
+```
+
 ---
 
-### Update Lead Status
+## Update Lead Status
 
 ```http
 PATCH /api/leads/{lead_id}/status
 ```
+
+This endpoint requires JWT authentication.
 
 Supported statuses:
 
@@ -244,11 +430,17 @@ Example:
 PATCH /api/leads/1/status?status=Contacted
 ```
 
+Required header:
+
+```text
+Authorization: Bearer <access_token>
+```
+
 ---
 
-## Validation
+# Validation
 
-### Client-Side Validation
+## Client-Side Validation
 
 The frontend validates required form fields before submission.
 
@@ -259,24 +451,214 @@ The form validates:
 * Required budget selection
 * Required project message
 
-### Server-Side Validation
+## Server-Side Validation
 
 The backend validates incoming requests using Pydantic.
 
 The API validates:
 
-* Name length
+* Name
 * Email format
-* Budget value
+* Budget
 * Message length
 
 This ensures that invalid data cannot be stored even if frontend validation is bypassed.
 
 ---
 
-## Running the Project Locally
+# Deployment
 
-### 1. Clone the Repository
+The application was deployed to free-tier hosting platforms.
+
+## Frontend
+
+The React frontend is deployed on:
+
+```text
+Vercel
+```
+
+## Backend
+
+The FastAPI backend is deployed on:
+
+```text
+Render
+```
+
+The deployed frontend communicates with the deployed backend through REST API requests.
+
+---
+
+# Fresh Browser Testing
+
+As part of Task B, the deployed application was tested from a fresh browser session with no existing local state.
+
+The tested flow was:
+
+```text
+Fresh browser session
+        ↓
+Open public website
+        ↓
+Submit a new project enquiry
+        ↓
+Open /admin
+        ↓
+Login with admin credentials
+        ↓
+View submitted lead
+        ↓
+Search for lead
+        ↓
+Change status: New → Contacted
+        ↓
+Change status: Contacted → Closed
+```
+
+This confirmed the complete deployed flow from public lead submission to authenticated lead management.
+
+---
+
+# Live Application
+
+## Public Website
+
+https://lead-desk-mini-lovat.vercel.app
+
+## Admin Dashboard
+
+https://lead-desk-mini-lovat.vercel.app/admin
+
+## Backend API
+
+https://leaddesk-mini-2cyf.onrender.com
+
+## API Documentation
+
+https://leaddesk-mini-2cyf.onrender.com/docs
+
+---
+
+# Test Credentials
+
+The admin login is available for evaluation.
+
+```text
+Username: admin
+Password: Provided separately for evaluation
+```
+
+The password is intentionally not published directly in this public repository.
+
+---
+
+# Task B Deliverables
+
+## 1. Deployed URLs
+
+### Public Application
+
+https://lead-desk-mini-lovat.vercel.app
+
+### Admin Dashboard
+
+https://lead-desk-mini-lovat.vercel.app/admin
+
+### Backend API
+
+https://leaddesk-mini-2cyf.onrender.com
+
+---
+
+## 2. README
+
+This README documents:
+
+* The application architecture
+* Lead data model
+* Authentication approach
+* JWT token flow
+* Protected API endpoints
+* Deployment
+* Local setup
+* Testing flow
+
+---
+
+## 3. Loom Walkthrough
+
+The walkthrough demonstrates the complete flow:
+
+1. Opening the public website
+2. Submitting a new project enquiry
+3. Opening the admin dashboard
+4. Logging in with admin credentials
+5. Viewing the submitted lead
+6. Searching for the lead
+7. Changing the status from `New` to `Contacted`
+8. Changing the status from `Contacted` to `Closed`
+
+### Loom Walkthrough
+
+```text
+Loom URL: [Add your Loom walkthrough link here]
+```
+
+---
+
+# Security Improvements in Task B
+
+The application was improved with:
+
+* Real backend admin authentication
+* Password hash verification
+* JWT access tokens
+* Protected admin API endpoints
+* Token-based authorization
+* Server-side request validation
+* CORS configuration for the deployed frontend and local development
+* No reliance on a frontend-only hardcoded access check
+* Fresh-browser testing with no existing local authentication state
+
+---
+
+# Design Decisions
+
+## Why SQLite?
+
+SQLite was selected because it is:
+
+* Simple to configure
+* Lightweight
+* Suitable for this small lead management application
+* Easy to run locally without additional database infrastructure
+
+## Why FastAPI?
+
+FastAPI provides:
+
+* Clear API structure
+* Automatic API documentation
+* Pydantic-based request validation
+* High performance
+* Simple integration with the React frontend
+
+## Why React?
+
+React was used to create:
+
+* A component-based frontend
+* Interactive form handling
+* Dynamic admin dashboard updates
+* Search functionality
+* Status management without page reloads
+
+---
+
+# Running the Project Locally
+
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Lunatic-A/LeadDesk-Mini
@@ -287,7 +669,7 @@ cd LeadDesk-Mini
 
 ## Backend Setup
 
-Open a terminal in the project root:
+Navigate to the backend folder:
 
 ```bash
 cd backend
@@ -323,7 +705,7 @@ The backend will run at:
 http://127.0.0.1:8000
 ```
 
-FastAPI interactive documentation:
+FastAPI documentation:
 
 ```text
 http://127.0.0.1:8000/docs
@@ -361,7 +743,7 @@ http://localhost:5173
 
 ## Local Application URLs
 
-### Public Landing Page
+### Public Website
 
 ```text
 http://localhost:5173
@@ -381,91 +763,37 @@ http://127.0.0.1:8000/docs
 
 ---
 
-## Database
+# AI Usage
 
-LeadDesk Mini uses SQLite with SQLAlchemy.
+AI tools were used during the development process for assistance with:
 
-The database stores:
+* Project planning
+* Debugging
+* Code suggestions
+* Implementation guidance
+* API integration troubleshooting
+* Authentication implementation guidance
+* User interface refinement
 
-* Lead ID
-* Name
-* Email
-* Budget
-* Project message
-* Lead status
-* Creation timestamp
-
-The default status for every new lead is:
-
-```text
-New
-```
-
-Lead statuses can then be updated through the admin dashboard:
-
-```text
-New → Contacted → Closed
-```
+The final project structure, technical decisions, integration, testing, deployment, and product implementation were reviewed and completed by me.
 
 ---
 
-## Design Decisions
+# Digital Heroes Training Task Credit
 
-### Why SQLite?
-
-SQLite was selected because it is:
-
-* Simple to configure
-* Lightweight
-* Suitable for this small lead management application
-* Easy to run locally without additional database infrastructure
-
-### Why FastAPI?
-
-FastAPI provides:
-
-* Clear API structure
-* Automatic API documentation
-* Pydantic-based request validation
-* High performance
-* Simple integration with the React frontend
-
-### Why React?
-
-React was used to create:
-
-* A reusable component-based frontend
-* Interactive form handling
-* Dynamic admin dashboard updates
-* Search and status management without page reloads
-
----
-
-## AI Usage
-
-AI tools were used during the development process for assistance with project planning, debugging, code suggestions, implementation guidance, and refining parts of the user interface.
-
-The final project structure, technical decisions, integration, testing, and product implementation were reviewed and completed by me.
-
----
-
-## Digital Heroes Training Task Credit
-
-This project includes the required training task credit in the public website footer:
+This project includes the required visible credit line in the public website footer:
 
 **Built for Digital Heroes Training Task**
 
 The credit links to:
 
-```text
 https://digitalheroesco.com
-```
 
 ---
 
-## Project Status
+# Project Status
 
-### Task A — LeadDesk Mini
+## Task A — Build LeadDesk Mini
 
 * [x] Public landing page
 * [x] Lead capture form
@@ -476,15 +804,29 @@ https://digitalheroesco.com
 * [x] Lead search
 * [x] Lead status management
 * [x] Responsive interface
+* [x] Loading and empty states
 * [x] Required footer credit
+
+## Task B — Secure It and Ship It
+
+* [x] Real admin authentication
+* [x] Password hash verification
+* [x] JWT-based authentication
+* [x] Protected admin endpoints
+* [x] Frontend deployment
+* [x] Backend deployment
+* [x] Deployed URLs
+* [x] Fresh-browser testing
+* [x] README documentation
+* [ ] Loom walkthrough link added
 
 ---
 
-## Author
+# Author
 
 Built by **Ayesha Zahid**
 
-B.Sc. Information Technology Graduate
+**B.Sc. Information Technology Graduate**
 
 Interested in:
 
@@ -495,6 +837,6 @@ Interested in:
 
 ---
 
-## License
+# License
 
-This project was created as part of the Digital Heroes Full Stack Development Training Task.
+This project was created as part of the **Digital Heroes Full Stack Development Training Task**.
