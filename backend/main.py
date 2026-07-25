@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from database import Base, engine, SessionLocal
-from models import Lead
-from schemas import LeadCreate, LeadResponse
+from backend.models import Lead
+from backend.schemas import LeadCreate, LeadResponse
 
 
 # Create database tables
@@ -17,7 +17,10 @@ app = FastAPI(title="LeadDesk Mini API")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "lead-desk-mini-gvm2mo3t3-ashprojectsvercelapp.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
