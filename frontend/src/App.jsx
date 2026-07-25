@@ -350,16 +350,12 @@ function PublicLandingPage() {
     console.log("Submitting:", payload);
 
     const response = await fetch(
-  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status`,
+  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status?status=${encodeURIComponent(newStatus)}`,
   {
     method: "PATCH",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
-    body: JSON.stringify({
-      status: newStatus,
-    }),
   }
 );
 

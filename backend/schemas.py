@@ -25,6 +25,3 @@ class LeadResponse(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
-
-class StatusUpdate(BaseModel):
-    status: str

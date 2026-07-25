@@ -1,20 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from auth import get_current_admin
+
 from database import Base, engine, SessionLocal
 from models import Lead
-from schemas import LeadCreate, LeadResponse
-
-from auth import verify_password, create_access_token
+from schemas import LeadCreate, LeadResponse, LoginRequest
+from auth import verify_password, create_access_token, get_current_admin
 from admin import ADMIN_USERNAME, ADMIN_PASSWORD_HASH
-from schemas import LoginRequest
 
-from auth import (
-    verify_password,
-    create_access_token,
-    get_current_admin
-)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -34,6 +27,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Database dependency
 def get_db():
@@ -60,13 +54,38 @@ def health_check():
     }
 
 
-# Create a new lead
-@app.post(
-    "/api/leads",
-    response_model=LeadResponse,
-    status_code=201
-)
+# Login
+@app.post("/api/login")
+def login(credentials: LoginRequest):
 
+    if credentials.username != ADMIN_USERNAME:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+
+    if not verify_password(
+        credentials.password,
+        ADMIN_PASSWORD_HASH
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+
+    token = create_access_token(
+        {
+            "sub": credentials.username
+        }
+    )
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
+
+
+# Create a new lead
 @app.post(
     "/api/leads",
     response_model=LeadResponse,
@@ -114,11 +133,25 @@ def get_leads(
 @app.patch("/api/leads/{lead_id}/status")
 def update_lead_status(
     lead_id: int,
-    status_update: StatusUpdate,
+    status: str,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_admin)
+    current_admin: str = Depends(get_current_admin)
 ):
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    allowed_statuses = [
+        "New",
+        "Contacted",
+        "Closed"
+    ]
+
+    if status not in allowed_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid status"
+        )
+
+    lead = db.query(Lead).filter(
+        Lead.id == lead_id
+    ).first()
 
     if not lead:
         raise HTTPException(
@@ -126,13 +159,7 @@ def update_lead_status(
             detail="Lead not found"
         )
 
-    if status_update.status not in ["New", "Contacted", "Closed"]:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid status"
-        )
-
-    lead.status = status_update.status
+    lead.status = status
 
     db.commit()
     db.refresh(lead)
