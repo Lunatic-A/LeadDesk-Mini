@@ -1,20 +1,12 @@
-from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 class LeadCreate(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1)
     email: EmailStr
-    budget: str
-    message: str
-
-    email: EmailStr
-
-    budget: str = Field(
-        ...,
-        min_length=1
-    )
-
+    budget: str = Field(..., min_length=1)
     message: str = Field(
         ...,
         min_length=10,
@@ -33,6 +25,7 @@ class LeadResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class LoginRequest(BaseModel):
     username: str
