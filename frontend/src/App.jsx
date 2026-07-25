@@ -1,70 +1,107 @@
 import { useEffect, useState } from "react";
 import Login from "./Login";
 
+const API_URL = "https://leaddesk-mini-2cyf.onrender.com";
+
 function AdminDashboard() {
   const [leads, setLeads] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchLeads = async (searchTerm = "") => {
+  const fetchLeads = async (searchValue = "") => {
     try {
       setLoading(true);
 
       const token = localStorage.getItem("token");
 
-const response = await fetch(
-  `https://leaddesk-mini-2cyf.onrender.com/api/leads?search=${encodeURIComponent(
-    searchTerm
-  )}`,
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
+      const response = await fetch(
+        `${API_URL}/api/leads?search=${encodeURIComponent(searchValue)}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const data = await response.json();
-      setLeads(data);
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to fetch leads");
+      }
+
+      // Prevent .filter() / .map() crashes
+      setLeads(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Failed to fetch leads:", error);
+
+      // If token is invalid or expired
+      if (
+        error.message.toLowerCase().includes("token") ||
+        error.message.toLowerCase().includes("credentials") ||
+        error.message.toLowerCase().includes("unauthorized")
+      ) {
+        localStorage.removeItem("token");
+        window.location.reload();
+        return;
+      }
+
+      setLeads([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLeads();
+    fetchLeads("");
   }, []);
 
-  const response = await fetch(
-  `https://leaddesk-mini-2cyf.onrender.com/api/leads/${leadId}/status`,
-  {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-    body: JSON.stringify({
-      status: newStatus,
-    }),
-  }
-);
+  const updateStatus = async (leadId, newStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `${API_URL}/api/leads/${leadId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: newStatus,
+          }),
+        }
+      );
+
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error("Failed to update status");
+        throw new Error(data.detail || "Failed to update status");
       }
 
+      // Refresh the lead list after updating
       fetchLeads(search);
     } catch (error) {
       alert(error.message);
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.reload();
+  };
+
   const totalLeads = leads.length;
-  const newLeads = leads.filter((lead) => lead.status === "New").length;
+
+  const newLeads = leads.filter(
+    (lead) => lead.status === "New"
+  ).length;
+
   const contactedLeads = leads.filter(
     (lead) => lead.status === "Contacted"
   ).length;
+
   const closedLeads = leads.filter(
     (lead) => lead.status === "Closed"
   ).length;
@@ -74,48 +111,78 @@ const response = await fetch(
       <header className="admin-topbar">
         <div className="admin-brand">
           <div className="admin-logo">L</div>
+
           <div>
             <h2>LeadDesk</h2>
             <span>Lead Management</span>
           </div>
         </div>
 
-        <a href="/" className="back-link">
-          View Public Site ↗
-        </a>
+        <div className="admin-actions">
+          <a href="/" className="back-link">
+            View Public Site ↗
+          </a>
+
+          <button
+            onClick={handleLogout}
+            className="logout-button"
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       <main className="admin-main">
         <div className="admin-heading">
           <div>
             <p className="eyebrow">OVERVIEW</p>
+
             <h1>Good morning, Admin.</h1>
-            <p>Manage and track your incoming project leads.</p>
+
+            <p>
+              Manage and track your incoming project leads.
+            </p>
           </div>
         </div>
 
         <section className="stats-grid">
           <div className="stat-card">
-            <span className="stat-label">TOTAL LEADS</span>
+            <span className="stat-label">
+              TOTAL LEADS
+            </span>
+
             <strong>{totalLeads}</strong>
+
             <p>All submitted enquiries</p>
           </div>
 
           <div className="stat-card">
-            <span className="stat-label">NEW</span>
+            <span className="stat-label">
+              NEW
+            </span>
+
             <strong>{newLeads}</strong>
+
             <p>Awaiting first contact</p>
           </div>
 
           <div className="stat-card">
-            <span className="stat-label">CONTACTED</span>
+            <span className="stat-label">
+              CONTACTED
+            </span>
+
             <strong>{contactedLeads}</strong>
+
             <p>Currently in progress</p>
           </div>
 
           <div className="stat-card">
-            <span className="stat-label">CLOSED</span>
+            <span className="stat-label">
+              CLOSED
+            </span>
+
             <strong>{closedLeads}</strong>
+
             <p>Successfully completed</p>
           </div>
         </section>
@@ -124,18 +191,24 @@ const response = await fetch(
           <div className="section-header">
             <div>
               <h2>All Leads</h2>
-              <p>Review and manage your project enquiries.</p>
+
+              <p>
+                Review and manage your project enquiries.
+              </p>
             </div>
 
             <div className="search-wrapper">
               <span>⌕</span>
+
               <input
                 type="search"
                 placeholder="Search name or email..."
                 value={search}
                 onChange={(event) => {
                   const value = event.target.value;
+
                   setSearch(value);
+
                   fetchLeads(value);
                 }}
               />
@@ -149,43 +222,60 @@ const response = await fetch(
           ) : leads.length === 0 ? (
             <div className="empty-state">
               <h3>No leads found</h3>
-              <p>Try a different search or submit a new lead.</p>
+
+              <p>
+                Try a different search or submit a new lead.
+              </p>
             </div>
           ) : (
             <div className="lead-cards">
               {leads.map((lead) => (
-                <article className="lead-card" key={lead.id}>
+                <article
+                  className="lead-card"
+                  key={lead.id}
+                >
                   <div className="lead-card-main">
                     <div className="lead-avatar">
-                      {lead.name.charAt(0).toUpperCase()}
+                      {lead.name
+                        ?.charAt(0)
+                        .toUpperCase()}
                     </div>
 
                     <div className="lead-info">
                       <h3>{lead.name}</h3>
+
                       <p>{lead.email}</p>
                     </div>
                   </div>
 
                   <div className="lead-detail">
                     <span>Budget</span>
-                    <strong>{lead.budget}</strong>
+
+                    <strong>
+                      {lead.budget}
+                    </strong>
                   </div>
 
                   <div className="lead-detail message-detail">
                     <span>Message</span>
+
                     <p>{lead.message}</p>
                   </div>
 
                   <div className="lead-detail">
                     <span>Submitted</span>
+
                     <strong>
                       {new Date(
                         lead.created_at
-                      ).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      ).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
                     </strong>
                   </div>
 
@@ -202,11 +292,17 @@ const response = await fetch(
                         )
                       }
                     >
-                      <option value="New">New</option>
+                      <option value="New">
+                        New
+                      </option>
+
                       <option value="Contacted">
                         Contacted
                       </option>
-                      <option value="Closed">Closed</option>
+
+                      <option value="Closed">
+                        Closed
+                      </option>
                     </select>
                   </div>
                 </article>
@@ -218,27 +314,14 @@ const response = await fetch(
 
       <footer className="admin-footer">
         <span>LeadDesk Mini</span>
+
         <span>Admin Dashboard</span>
       </footer>
     </div>
   );
 }
 
-function App() {
-   if (window.location.pathname === "/admin") {
-
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    return (
-      <Login
-        onLogin={() => window.location.reload()}
-      />
-    );
-  }
-
-  return <AdminDashboard />;
-}
+function PublicLandingPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -254,41 +337,54 @@ function App() {
   };
 
   const handleSubmit = async (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  try {
-    const response = await fetch("https://leaddesk-mini-2cyf.onrender.com/api/leads", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const response = await fetch(
+        `${API_URL}/api/leads`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.detail || "Something went wrong");
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Something went wrong"
+        );
+      }
+
+      alert(
+        "Thank you! Your project details have been submitted."
+      );
+
+      setFormData({
+        name: "",
+        email: "",
+        budget: "",
+        message: "",
+      });
+    } catch (error) {
+      alert(error.message);
     }
-
-    alert("Thank you! Your project details have been submitted.");
-
-    setFormData({
-      name: "",
-      email: "",
-      budget: "",
-      message: "",
-    });
-  } catch (error) {
-    alert(error.message);
-  }
-};
+  };
 
   return (
     <div className="app">
       <header className="navbar">
-        <div className="logo">LeadDesk</div>
-        <a href="#lead-form" className="nav-button">
+        <div className="logo">
+          LeadDesk
+        </div>
+
+        <a
+          href="#lead-form"
+          className="nav-button"
+        >
           Start a Project
         </a>
       </header>
@@ -296,58 +392,98 @@ function App() {
       <main>
         <section className="hero">
           <div className="hero-content">
-            <p className="eyebrow">DIGITAL PROJECT INTAKE</p>
+            <p className="eyebrow">
+              DIGITAL PROJECT INTAKE
+            </p>
 
             <h1>
               Your idea deserves
-              <span> a clear next step.</span>
+              <span>
+                {" "}
+                a clear next step.
+              </span>
             </h1>
 
             <p className="hero-description">
-              Tell us what you are building, what you need, and where you want
+              Tell us what you are building,
+              what you need, and where you want
               to go. We will take it from there.
             </p>
 
-            <a href="#lead-form" className="primary-button">
+            <a
+              href="#lead-form"
+              className="primary-button"
+            >
               Tell us about your project →
             </a>
           </div>
 
           <div className="hero-card">
-            <div className="card-label">LEAD DESK MINI</div>
-            <h2>From first message to meaningful progress.</h2>
+            <div className="card-label">
+              LEAD DESK MINI
+            </div>
+
+            <h2>
+              From first message to meaningful
+              progress.
+            </h2>
 
             <div className="process">
               <div>
                 <strong>01</strong>
-                <span>Share your idea</span>
+
+                <span>
+                  Share your idea
+                </span>
               </div>
 
               <div>
                 <strong>02</strong>
-                <span>We understand the need</span>
+
+                <span>
+                  We understand the need
+                </span>
               </div>
 
               <div>
                 <strong>03</strong>
-                <span>Build what matters</span>
+
+                <span>
+                  Build what matters
+                </span>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="lead-form" className="form-section">
+        <section
+          id="lead-form"
+          className="form-section"
+        >
           <div className="form-intro">
-            <p className="eyebrow">LET'S TALK</p>
-            <h2>Tell us about your project.</h2>
+            <p className="eyebrow">
+              LET'S TALK
+            </p>
+
+            <h2>
+              Tell us about your project.
+            </h2>
+
             <p>
-              A few details are enough to get the conversation started.
+              A few details are enough to get
+              the conversation started.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="lead-form">
+          <form
+            onSubmit={handleSubmit}
+            className="lead-form"
+          >
             <div className="form-group">
-              <label htmlFor="name">Your name</label>
+              <label htmlFor="name">
+                Your name
+              </label>
+
               <input
                 id="name"
                 name="name"
@@ -360,7 +496,10 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email address</label>
+              <label htmlFor="email">
+                Email address
+              </label>
+
               <input
                 id="email"
                 name="email"
@@ -373,7 +512,10 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="budget">Budget range</label>
+              <label htmlFor="budget">
+                Budget range
+              </label>
+
               <select
                 id="budget"
                 name="budget"
@@ -381,20 +523,33 @@ function App() {
                 onChange={handleChange}
                 required
               >
-                <option value="">Select a budget range</option>
-                <option value="Under ₹50,000">Under ₹50,000</option>
+                <option value="">
+                  Select a budget range
+                </option>
+
+                <option value="Under ₹50,000">
+                  Under ₹50,000
+                </option>
+
                 <option value="₹50,000 - ₹1,00,000">
                   ₹50,000 - ₹1,00,000
                 </option>
+
                 <option value="₹1,00,000 - ₹3,00,000">
                   ₹1,00,000 - ₹3,00,000
                 </option>
-                <option value="₹3,00,000+">₹3,00,000+</option>
+
+                <option value="₹3,00,000+">
+                  ₹3,00,000+
+                </option>
               </select>
             </div>
 
             <div className="form-group">
-              <label htmlFor="message">Tell us about your project</label>
+              <label htmlFor="message">
+                Tell us about your project
+              </label>
+
               <textarea
                 id="message"
                 name="message"
@@ -403,10 +558,13 @@ function App() {
                 value={formData.message}
                 onChange={handleChange}
                 required
-              ></textarea>
+              />
             </div>
 
-            <button type="submit" className="submit-button">
+            <button
+              type="submit"
+              className="submit-button"
+            >
               Submit your project →
             </button>
           </form>
@@ -414,7 +572,9 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>© 2026 LeadDesk Mini</p>
+        <p>
+          © 2026 LeadDesk Mini
+        </p>
 
         <a
           href="https://digitalheroesco.com"
@@ -426,6 +586,29 @@ function App() {
       </footer>
     </div>
   );
+}
+
+function App() {
+  if (
+    window.location.pathname === "/admin"
+  ) {
+    const token =
+      localStorage.getItem("token");
+
+    if (!token) {
+      return (
+        <Login
+          onLogin={() =>
+            window.location.reload()
+          }
+        />
+      );
+    }
+
+    return <AdminDashboard />;
+  }
+
+  return <PublicLandingPage />;
 }
 
 export default App;
