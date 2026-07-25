@@ -17,11 +17,8 @@ app = FastAPI(title="LeadDesk Mini API")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "lead-desk-mini-gvm2mo3t3-ashprojectsvercelapp.vercel.app",
-    ],
-    allow_credentials=False,
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
