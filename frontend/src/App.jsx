@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Login from "./Login";
 
 function AdminDashboard() {
   const [leads, setLeads] = useState([]);
@@ -213,8 +214,19 @@ function AdminDashboard() {
 
 function App() {
    if (window.location.pathname === "/admin") {
-    return <AdminDashboard />;
-   }
+
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return (
+      <Login
+        onLogin={() => window.location.reload()}
+      />
+    );
+  }
+
+  return <AdminDashboard />;
+}
   const [formData, setFormData] = useState({
     name: "",
     email: "",
