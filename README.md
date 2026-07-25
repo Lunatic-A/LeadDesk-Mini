@@ -602,7 +602,7 @@ The walkthrough demonstrates the complete flow:
 ### Loom Walkthrough
 
 ```text
-Loom URL: [Add your Loom walkthrough link here]
+Loom URL: https://drive.google.com/file/d/1JXeWPqMm0KCt1EO6fzYoi0l5gr4OQNIe/view?usp=sharing
 ```
 
 ---
@@ -818,7 +818,7 @@ https://digitalheroesco.com
 * [x] Deployed URLs
 * [x] Fresh-browser testing
 * [x] README documentation
-* [ ] Loom walkthrough link added
+* [x] Loom walkthrough link added
 
 ---
 
